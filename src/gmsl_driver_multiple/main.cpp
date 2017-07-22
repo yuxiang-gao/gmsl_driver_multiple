@@ -33,6 +33,7 @@
 #include <cstring>
 #include <thread>
 #include <queue>
+#include <vector>
 
 //#include <lodepng.h>
 
@@ -96,7 +97,7 @@ struct Camera {
 //------------------------------------------------------------------------------
 int main(int argc, const char **argv);
 void takeScreenshot(dwImageNvMedia *frameNVMrgba, uint8_t group, uint32_t sibling);
-void pubImg(dwImageNvMedia *frameNVMrgba, uint8_t group, uint32_t sibling);
+void pubImg(dwImageNvMedia *frameNVMrgba, dwImageNvMedia *frameNVMrgba2);
 void parseArguments(int argc, const char **argv);
 void initGL(WindowBase **window);
 void initRenderer(dwRendererHandle_t *renderer,
@@ -270,20 +271,8 @@ int main(int argc, const char **argv)
             }
         }
 
-        // stop to take screenshot (will cause a delay)
-        //if (gTakeScreenshot) {
-            for (size_t csiPort = 0; csiPort < cameraSensor.size(); csiPort++) {
-                for (uint32_t cameraIdx = 0;
-                     cameraIdx < cameraSensor[csiPort].numSiblings && !cameraSensor[csiPort].rgbaPool.empty();
-                     cameraIdx++) {
-
-                    //takeScreenshot(frameRGBAPtr[csiPort][cameraIdx], csiPort, cameraIdx);
-                    pubImg(frameRGBAPtr[csiPort][cameraIdx], csiPort, cameraIdx);
-                }
-            }
-        //    gScreenshotCount++;
-       //     gTakeScreenshot = false;
-       // }
+        // retrieve imgs
+        pubImg(frameRGBAPtr[0][0], frameRGBAPtr[0][1]);
 
         // render all
         {
@@ -394,18 +383,45 @@ void takeScreenshot(dwImageNvMedia *frameNVMrgba, uint8_t group, uint32_t siblin
     }
 }
 */
-void pubImg(dwImageNvMedia *frameNVMrgba, uint8_t group, uint32_t sibling)
+void pubImg(dwImageNvMedia *frameNVMrgba, dwImageNvMedia *frameNVMrgba2)
 {   
-    OpenCVConnector cv;
+    int size = frameNVMrgba->prop.width * frameNVMrgba->prop.height * 4;
+    std::cout<<"a"<<"\n";
+    unsigned char* nbuffer = new unsigned char[size * 2];            
+    OpenCVConnector cvc;
     NvMediaImageSurfaceMap surfaceMap;
-    if (NvMediaImageLock(frameNVMrgba->img, NVMEDIA_IMAGE_ACCESS_READ, &surfaceMap) == NVMEDIA_STATUS_OK)
+    NvMediaImageSurfaceMap surfaceMap2;
+    std::cout<<"b"<<"\n";
+    if (NvMediaImageLock(frameNVMrgba->img, NVMEDIA_IMAGE_ACCESS_READ, &surfaceMap) == NVMEDIA_STATUS_OK && NvMediaImageLock(frameNVMrgba2->img, NVMEDIA_IMAGE_ACCESS_READ, &surfaceMap2) == NVMEDIA_STATUS_OK)
     {
-        cv.WriteToOpenCV((unsigned char*)surfaceMap.surface[0].mapping, frameNVMrgba->prop.width, frameNVMrgba->prop.height);
+    std::cout<<"c"<<"\n";
+        std::memcpy(nbuffer, (unsigned char*)surfaceMap.surface[0].mapping, size);
+ std::cout<<"f"<<"\n";
+        std::memcpy(nbuffer+size, (unsigned char*)surfaceMap2.surface[0].mapping, size);
+ std::cout<<"g"<<"\n";
+        cvc.WriteToOpenCV(nbuffer, frameNVMrgba->prop.width, frameNVMrgba->prop.height*2);
         NvMediaImageUnlock(frameNVMrgba->img);
+        NvMediaImageUnlock(frameNVMrgba2->img);
+std::cout<<"end"<<std::endl;
     }else
     {
         std::cout << "CANNOT LOCK NVMEDIA IMAGE - NO SCREENSHOT\n";
     }
+/*
+    int size = frameNVMrgba->prop.width * frameNVMrgba->prop.height * 4;
+    std::cout<<"a"<<"\n";         
+    OpenCVConnector cvc;
+    NvMediaImageSurfaceMap surfaceMap;
+    std::cout<<"b"<<"\n";
+    if (NvMediaImageLock(frameNVMrgba->img, NVMEDIA_IMAGE_ACCESS_READ, &surfaceMap) == NVMEDIA_STATUS_OK)
+    {
+        cvc.WriteToOpenCV((unsigned char*)surfaceMap.surface[0].mapping, frameNVMrgba->prop.width, frameNVMrgba->prop.height);
+        NvMediaImageUnlock(frameNVMrgba->img);
+std::cout<<"end"<<std::endl;
+    }else
+    {
+        std::cout << "CANNOT LOCK NVMEDIA IMAGE - NO SCREENSHOT\n";
+    }*/
 }
 //------------------------------------------------------------------------------
 void parseArguments(int argc, const char **argv)

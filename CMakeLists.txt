@@ -31,6 +31,7 @@ find_package(Threads REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(Driveworks REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(Boost REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
@@ -65,6 +66,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${GLEW_INCLUDE_DIR}
   ${glfw_INCLUDE_DIR}
+  ${BOOST_INCLUDE_DIR}
 )
 
 
@@ -103,6 +105,7 @@ target_link_libraries(${NODE_NAME} PRIVATE
     GLESv2
     EGL
     drm
+    ${BOOST_LIBRARY}
     ${CUDA_LIBRARY}
     ${OpenCV_LIBS} 
 )
