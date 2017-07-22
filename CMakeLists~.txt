@@ -1,0 +1,75 @@
+# Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
+
+cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+
+#-------------------------------------------------------------------------------
+# Set basic configurations
+#-------------------------------------------------------------------------------
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(SamplesSetBuildType) # Set the build type before project is created
+
+set(SDK_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(SDK_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+set(VIBRANTE TRUE)
+add_definitions(-DVIBRANTE)
+#-------------------------------------------------------------------------------
+# Root project
+#-------------------------------------------------------------------------------
+project(DriveworksSDK-Samples C CXX)
+
+#-------------------------------------------------------------------------------
+# System packages
+#-------------------------------------------------------------------------------
+find_package(CUDA REQUIRED)
+find_package(Threads REQUIRED)
+
+#-------------------------------------------------------------------------------
+# Basic configuration
+#-------------------------------------------------------------------------------
+include(ArchConfiguration)
+include(CommonConfiguration)
+include(SamplesConfiguration)
+include(Samples3rdparty)
+include(SamplesInstallConfiguration)
+set(SDK_BINARY_DIR ${CMAKE_BINARY_DIR})
+
+
+#-------------------------------------------------------------------------------
+# Driveworks SDK
+#-------------------------------------------------------------------------------
+set(Driveworks_INCLUDE_DIR /usr/local/driveworks/include)
+set(Driveworks_LIBRARY /usr/local/driveworks/lib)
+link_directories(${Driveworks_LIBRARY})
+find_package(Driveworks REQUIRED)
+include_directories(${Driveworks_INCLUDE_DIR})
+
+list(APPEND Driveworks_LIBRARIES ${CUDA_LIBRARIES} ${CUDA_cublas_LIBRARY})
+
+if(LINUX)
+    list(APPEND Driveworks_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} dl rt)
+elseif(VIBRANTE)
+    list(APPEND Driveworks_LIBRARIES ${vibrante_LIBRARIES} nvmedia ${EGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
+#-------------------------------------------------------------------------------
+# Samples
+#-------------------------------------------------------------------------------
+
+#include_directories(${SDK_BINARY_DIR}/configured/samples)
+configure_file(src/common/DataPath.hpp.in
+               src/common/DataPath.hpp)
+
+ #set(SAMPLES common;egomotion;sensors;features;mapping;rigconfiguration;renderer;sfm;dnn;laneDetection;colorcorrection;raw;rectifier;ipc;hello_world;image;stereo;freespace;drivenet;maps)
+set(SAMPLES common;dnn;drivenet-lanenet)
+ foreach(SAMPLE ${SAMPLES})
+    add_subdirectory(src/${SAMPLE})
+endforeach()
+
+
+#-------------------------------------------------------------------------------
+# Cuda dependenciess
+#-------------------------------------------------------------------------------
+# Create a target to update cuda dependencies
+add_cuda_dependencies_target(update_cuda_deps ON)
+set_property(TARGET update_cuda_deps PROPERTY FOLDER "Support")

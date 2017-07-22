@@ -1,0 +1,13 @@
+prefix=/home/nvidia/git-master/cv/3rdparty/src/build/install/linux-aarch64/glfw-3.1.1
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+
+Name: GLFW
+Description: A multi-platform library for OpenGL, window and input
+Version: 3.1.1
+URL: http://www.glfw.org/
+Requires.private:  x11 xrandr xinerama xi xcursor egl glesv2
+Libs: -L${libdir} -lglfw3
+Libs.private:  -lrt -lm
+Cflags: -I${includedir}
