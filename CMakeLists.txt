@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(drivenet_lanenet_ros)
+project(gmsl_driver_multiple)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -76,9 +76,9 @@ include_directories(/usr/share/visionworks/sources/3rdparty/nvmedia/
 #   src/${PROJECT_NAME}/drivenet_lanenet_ros.cpp
 # )
 set(COMMON_SOURCES
-    src/common/SampleFramework.cpp
+    #src/common/SampleFramework.cpp
     src/common/ProgramArguments.cpp
-    #src/common/Grid.cpp
+    src/common/Grid.cpp
     #src/common/Shader.cpp
     #src/common/VBO.cpp
     #src/common/GPUProgram.cpp
@@ -87,13 +87,13 @@ set(COMMON_SOURCES
     #src/common/MouseView3D.cpp
     src/common/ConsoleColor.cpp
     #src/common/ProfilerCUDA.cpp
-    #src/common/WindowGLFW.cpp
+    src/common/WindowGLFW.cpp
 
 
 )
 
 set(NODE_NAME ${PROJECT_NAME}_node)
-cuda_add_executable(${NODE_NAME} src/drivenet_lanenet/drivenet_lanenet/main.cpp src/drivenet_lanenet/common/common.cpp src/drivenet_lanenet/common/DriveNet.cpp src/drivenet_lanenet/common/LaneDetectionCommon.cpp src/drivenet_lanenet/drivenet_lanenet/cv_connection.cpp ${COMMON_SOURCES})
+cuda_add_executable(${NODE_NAME} src/gmsl_driver_multiple/main.cpp src/gmsl_driver_multiple/cv_connection.cpp ${COMMON_SOURCES})
 add_dependencies(${NODE_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${NODE_NAME} PRIVATE
     ${catkin_LIBRARIES}

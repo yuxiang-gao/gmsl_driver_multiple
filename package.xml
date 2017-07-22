@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>drivenet_lanenet_ros</name>
+  <name>gmsl_driver_multiple</name>
   <version>0.0.0</version>
   <description>The drivenet_lanenet_ros package</description>
 
