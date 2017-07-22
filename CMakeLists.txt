@@ -87,7 +87,7 @@ set(COMMON_SOURCES
     #src/common/MouseView3D.cpp
     src/common/ConsoleColor.cpp
     #src/common/ProfilerCUDA.cpp
-    src/common/WindowGLFW.cpp
+    #src/common/WindowGLFW.cpp
 
 
 )

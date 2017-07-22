@@ -272,7 +272,7 @@ int main(int argc, const char **argv)
 
         // stop to take screenshot (will cause a delay)
         //if (gTakeScreenshot) {
- /*           for (size_t csiPort = 0; csiPort < cameraSensor.size(); csiPort++) {
+            for (size_t csiPort = 0; csiPort < cameraSensor.size(); csiPort++) {
                 for (uint32_t cameraIdx = 0;
                      cameraIdx < cameraSensor[csiPort].numSiblings && !cameraSensor[csiPort].rgbaPool.empty();
                      cameraIdx++) {
@@ -280,7 +280,7 @@ int main(int argc, const char **argv)
                     //takeScreenshot(frameRGBAPtr[csiPort][cameraIdx], csiPort, cameraIdx);
                     pubImg(frameRGBAPtr[csiPort][cameraIdx], csiPort, cameraIdx);
                 }
-            }*/
+            }
         //    gScreenshotCount++;
        //     gTakeScreenshot = false;
        // }
@@ -419,7 +419,8 @@ void parseArguments(int argc, const char **argv)
 //------------------------------------------------------------------------------
 void initGL(WindowBase **window)
 {
-    bool offscreen = atoi(g_arguments.get("offscreen").c_str()) != 0;
+    //bool offscreen = atoi(g_arguments.get("offscreen").c_str()) != 0;
+    bool offscreen = true;
     #ifdef VIBRANTE
         if (offscreen)
             *window = new WindowOffscreenEGL(1280, 800);
@@ -428,7 +429,7 @@ void initGL(WindowBase **window)
     #endif
 
     if(!*window)
-        *window = new WindowGLFW(1280, 800);
+        //*window = new WindowGLFW(1280, 800);
 
     (*window)->makeCurrent();
     (*window)->setOnKeypressCallback(keyPressCallback);
