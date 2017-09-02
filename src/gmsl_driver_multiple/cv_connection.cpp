@@ -26,8 +26,8 @@ void OpenCVConnector::WriteToOpenCV(unsigned char* buffer, int width, int height
 
     cv::cvtColor(mat_img, converted, cv::COLOR_RGBA2BGR);   //=COLOR_BGRA2BG
     cv::flip(converted, converted, 0);
-    //cv::imshow("show", converted);
-    //cv::waitKey(3);
+    cv::imshow("show", converted);
+    cv::waitKey(3);
 
     cv_bridge::CvImage img_bridge;
     sensor_msgs::Image img_msg; // >> message to be sent
@@ -37,7 +37,7 @@ void OpenCVConnector::WriteToOpenCV(unsigned char* buffer, int width, int height
     header.stamp = ros::Time::now(); // time
     img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::BGR8, converted);
     img_bridge.toImageMsg(img_msg); // from cv_bridge to sensor_msgs::Image
-    std::cout << "return received gl" << std::endl;
+    std::cout << "pub image" << std::endl;
     pub.publish(img_msg); // ros::Publisher pub_img = node.advertise<sensor_msgs::Image>("topic", queuesize);
 
 }

@@ -72,7 +72,7 @@ ProgramArguments g_arguments(
         ProgramArguments::Option_t("offscreen", "0"),
         ProgramArguments::Option_t("slave", "0"),
         ProgramArguments::Option_t("fifo-size", "3"),
-        ProgramArguments::Option_t("cross-csi-sync", "0"),
+        ProgramArguments::Option_t("cross-csi-sync", "1"),
         ProgramArguments::Option_t("camera-count", "2"),
     });
 
@@ -272,8 +272,8 @@ int main(int argc, const char **argv)
         }
 
         // retrieve imgs
-        pubImg(frameRGBAPtr[0][0], frameRGBAPtr[0][1]);
-
+        //pubImg(frameRGBAPtr[0][0], frameRGBAPtr[0][1]);
+/*
         // render all
         {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -320,7 +320,7 @@ int main(int argc, const char **argv)
             window->swapBuffers();
             CHECK_GL_ERROR();
         }
-
+*/
         for (size_t i = 0; i < cameraSensor.size(); i++) {
             if (cameraSensor[i].rgbaPool.empty()) {
                 g_run = false;
@@ -385,12 +385,14 @@ void takeScreenshot(dwImageNvMedia *frameNVMrgba, uint8_t group, uint32_t siblin
 */
 void pubImg(dwImageNvMedia *frameNVMrgba, dwImageNvMedia *frameNVMrgba2)
 {   
-    int size = frameNVMrgba->prop.width * frameNVMrgba->prop.height * 4;
+
     std::cout<<"a"<<"\n";
-    unsigned char* nbuffer = new unsigned char[size * 2];            
-    OpenCVConnector cvc;
+    int size = frameNVMrgba->prop.width * frameNVMrgba->prop.height * 4;
+    unsigned char* nbuffer = new unsigned char[size * 2];   
     NvMediaImageSurfaceMap surfaceMap;
-    NvMediaImageSurfaceMap surfaceMap2;
+    NvMediaImageSurfaceMap surfaceMap2;         
+    OpenCVConnector cvc;
+
     std::cout<<"b"<<"\n";
     if (NvMediaImageLock(frameNVMrgba->img, NVMEDIA_IMAGE_ACCESS_READ, &surfaceMap) == NVMEDIA_STATUS_OK && NvMediaImageLock(frameNVMrgba2->img, NVMEDIA_IMAGE_ACCESS_READ, &surfaceMap2) == NVMEDIA_STATUS_OK)
     {
