@@ -12,15 +12,13 @@ class OpenCVConnector {
 public:
    OpenCVConnector();
 
-   void WriteToOpenCV(unsigned char*, int, int);
-
+   void WriteToOpenCV(cv::Mat img);
 
    ros::NodeHandle nh;
    image_transport::ImageTransport it;
    image_transport::Publisher pub;
 
    unsigned int counter;
-
 };
 
 
