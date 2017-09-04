@@ -51,8 +51,6 @@ int main(int argc, const char** argv) {
     ros::init(argc, (char**)argv, "image_publisher");    
 
     dwImageProperties baseProp;
-    cv::namedWindow("Test");
-    cv::waitKey(100);
 
     baseProp.type = DW_IMAGE_NVMEDIA;
     baseProp.pxlFormat = DW_IMAGE_RGBA;
@@ -132,8 +130,7 @@ void captureImageThread_testCameraAndGetPitch(
 }
 
 void captureImageThread(dwSensorHandle_t *cameraSensor, dwImageProperties *baseProp){
-    OpenCVConnector cvc;
-
+    OpenCVConnector *cvc = new OpenCVConnector();
     dwImageProperties cameraImageProperties;
     dwSensorCamera_getImageProperties(&cameraImageProperties, DW_CAMERA_PROCESSED_IMAGE, *cameraSensor);
     if(cameraImageProperties.pxlFormat!=DW_IMAGE_YUV420 || cameraImageProperties.planeCount != 3) exit(-1);
@@ -153,7 +150,7 @@ void captureImageThread(dwSensorHandle_t *cameraSensor, dwImageProperties *baseP
     while(gRun){
         captureImageThread_captureCamera(bufferL, dataLength, *cameraSensor, 0);
         captureImageThread_captureCamera(bufferR, dataLength, *cameraSensor, 1);
-        cvc.WriteToOpenCV(img);
+        cvc->WriteToOpenCV(img);
     }
 }
 

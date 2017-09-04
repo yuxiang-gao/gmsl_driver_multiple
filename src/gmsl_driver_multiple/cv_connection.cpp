@@ -9,13 +9,14 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 
+#include <iostream>
+
 OpenCVConnector::OpenCVConnector() : it(nh), counter(0)	{
    pub = it.advertise("camera/image", 1);
 }
 
 
-void OpenCVConnector::WriteToOpenCV(cv::Mat img) {
-
+void OpenCVConnector::WriteToOpenCV(const cv::Mat& img) {
     cv_bridge::CvImage img_bridge;
     sensor_msgs::Image img_msg; // >> message to be sent
 
@@ -24,9 +25,7 @@ void OpenCVConnector::WriteToOpenCV(cv::Mat img) {
     header.stamp = ros::Time::now(); // time
     img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::MONO8, img);
     img_bridge.toImageMsg(img_msg); // from cv_bridge to sensor_msgs::Image
-    std::cout << "pub image" << std::endl;
     pub.publish(img_msg); // ros::Publisher pub_img = node.advertise<sensor_msgs::Image>("topic", queuesize);
-
 }
 
 

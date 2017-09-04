@@ -3,6 +3,7 @@
 #define OPEN_CV_CONNECTOR
 
 #include <ros/ros.h>
+#include <opencv2/opencv.hpp>
 #include <image_transport/image_transport.h>
 
 
@@ -12,7 +13,7 @@ class OpenCVConnector {
 public:
    OpenCVConnector();
 
-   void WriteToOpenCV(cv::Mat img);
+   void WriteToOpenCV(const cv::Mat& img);
 
    ros::NodeHandle nh;
    image_transport::ImageTransport it;

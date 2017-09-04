@@ -90,7 +90,7 @@ set(COMMON_SOURCES
     src/common/ConsoleColor.cpp
     #src/common/ProfilerCUDA.cpp
     #src/common/WindowGLFW.cpp
-
+    src/common/SampleFramework.cpp
 
 )
 
