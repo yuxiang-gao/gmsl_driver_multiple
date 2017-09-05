@@ -130,7 +130,8 @@ void captureImageThread_testCameraAndGetPitch(
 }
 
 void captureImageThread(dwSensorHandle_t *cameraSensor, dwImageProperties *baseProp){
-    OpenCVConnector *cvc = new OpenCVConnector();
+    OpenCVConnector cvcL("gmsl_stereo/left/image_raw");
+    OpenCVConnector cvcR("gmsl_stereo/right/image_raw");
     dwImageProperties cameraImageProperties;
     dwSensorCamera_getImageProperties(&cameraImageProperties, DW_CAMERA_PROCESSED_IMAGE, *cameraSensor);
     if(cameraImageProperties.pxlFormat!=DW_IMAGE_YUV420 || cameraImageProperties.planeCount != 3) exit(-1);
@@ -145,12 +146,20 @@ void captureImageThread(dwSensorHandle_t *cameraSensor, dwImageProperties *baseP
     uint8_t *buffer = new uint8_t[dataLength*2];
     uint8_t *bufferL = buffer, *bufferR = buffer + dataLength;
 
-    cv::Mat pitchImg(baseProp->height*2, pitchL, CV_8UC1, buffer);
-    cv::Mat img = pitchImg(cv::Rect(0, 0, baseProp->width, baseProp->height * 2));
+    cv::Mat pitchImgL(baseProp->height, pitchL, CV_8UC1, bufferL);
+    cv::Mat pitchImgR(baseProp->height, pitchR, CV_8UC1, bufferR);
+    //cv::Mat pitchImgStack(baseProp->height * 2, pitchR, CV_8UC1, bufferR);
+    
+    cv::Mat imgL = pitchImgL(cv::Rect(0, 0, baseProp->width, baseProp->height));
+    cv::Mat imgR = pitchImgR(cv::Rect(0, 0, baseProp->width, baseProp->height));
+    //cv::Mat imgStack = pitchImgStack(cv::Rect(0, 0, baseProp->width, baseProp->height * 2));
+    
     while(gRun){
+        ros::Time pubTime = ros::Time::now();
         captureImageThread_captureCamera(bufferL, dataLength, *cameraSensor, 0);
         captureImageThread_captureCamera(bufferR, dataLength, *cameraSensor, 1);
-        cvc->WriteToOpenCV(img);
+        cvcL.WriteToOpenCV(imgL, pubTime);
+        cvcR.WriteToOpenCV(imgR, pubTime);
     }
 }
 

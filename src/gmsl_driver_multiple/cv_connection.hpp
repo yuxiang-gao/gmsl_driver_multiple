@@ -11,9 +11,9 @@
 class OpenCVConnector {
 
 public:
-   OpenCVConnector();
+   OpenCVConnector(std::string topic);
 
-   void WriteToOpenCV(const cv::Mat& img);
+   void WriteToOpenCV(const cv::Mat& img, ros::Time stamp);
 
    ros::NodeHandle nh;
    image_transport::ImageTransport it;
