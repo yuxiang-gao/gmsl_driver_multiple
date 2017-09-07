@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  camera_info_manager
 )
 
 set(Driveworks_INCLUDE_DIR /usr/local/driveworks/include)

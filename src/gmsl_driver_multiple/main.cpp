@@ -130,8 +130,13 @@ void captureImageThread_testCameraAndGetPitch(
 }
 
 void captureImageThread(dwSensorHandle_t *cameraSensor, dwImageProperties *baseProp){
-    OpenCVConnector cvcL("gmsl_stereo/left/image_raw");
-    OpenCVConnector cvcR("gmsl_stereo/right/image_raw");
+    std::string pathL = "", pathR = "";
+    GetFilePath(pathL, pathR);
+    std::cout<<"LLLLLL"<<pathL<<std::endl;
+    std::cout<<"RRRRRR"<<pathR<<std::endl;
+    
+    OpenCVConnector cvcL("left", "narrow_stereo/left", pathL);
+    OpenCVConnector cvcR("right", "narrow_stereo/right", pathR);
     dwImageProperties cameraImageProperties;
     dwSensorCamera_getImageProperties(&cameraImageProperties, DW_CAMERA_PROCESSED_IMAGE, *cameraSensor);
     if(cameraImageProperties.pxlFormat!=DW_IMAGE_YUV420 || cameraImageProperties.planeCount != 3) exit(-1);

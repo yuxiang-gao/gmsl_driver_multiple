@@ -1,0 +1,55 @@
+<launch>
+    <group ns="gmsl_stereo"><group ns="foo">
+        <arg name="respawn" default="false"/>
+        <arg name="left_camera_info_path" default="file://$(find gmsl_driver_multiple)/camera_info/left.yaml"/>
+        <arg name="right_camera_info_path" default="file://$(find gmsl_driver_multiple)/camera_info/right.yaml"/>
+        <arg name="left" default="left"/>
+        <arg name="right" default="right"/>
+        <arg     if="$(arg respawn)" name="bond" value="" />
+        <arg unless="$(arg respawn)" name="bond" value="--no-bond" />
+        
+        <node pkg="nodelet" type="nodelet" name="standalone_nodelet" args="manager"/>
+        
+        <!-- Camera Driver -->
+        <!-- pub: left/image_raw left/camera_info right/image_raw right/camera_info -->
+        <node pkg="gmsl_driver_multiple" type="gmsl_driver_multiple_node" name="gmsl_stereo" respawn="$(arg respawn)">
+            <param name="left_camera_info_path" type="str" value="$(arg left_camera_info_path)"/>
+            <param name="right_camera_info_path" type="str" value="$(arg right_camera_info_path)"/>
+        </node>
+        
+        <!-- FIXME: copied from package image_proc/launch/image_proc.launch  -->
+        <!-- FIXME: This nodelet is covered in gmsl_stereo/foo/left, and standalone_nodelet is covered in gmsl_stereo/foo, but out topic is /gmsl_stereo/image_rect, WHY?-->
+        <!-- image_proc/rectify : image_raw & camera_info -> image_rect -->
+        <group ns="left">
+            <node pkg="nodelet" type="nodelet" name="rectify_left" args="load image_proc/rectify standalone_nodelet $(arg bond)" respawn="$(arg respawn)"/>
+        </group>
+        
+        <!-- TODO: finish nodelet image_proc/rectify(left) image_proc/rectify(right) and stereo_image_proc/disparity -->
+        
+<!--        <group ns="left">-->
+<!--        <node pkg="nodelet" type="nodelet" name="rectify_left" args="load image_proc/rectify standalone_nodelet $(arg bond)" respawn="$(arg respawn)">-->
+<!--            <remap from="rectify_left/image_raw" to="left/image_raw"/>-->
+<!--            <remap from="rectify_left/camera_info" to="left/camera_info"/>-->
+<!--            <remap from="rectify_left/image_rect" to="left/image_rect"/>-->
+<!--        </node>-->
+<!--        </group>-->
+        
+        <!-- Disparity image -->
+<!--        <node pkg="nodelet" type="nodelet" name="disparity" args="load stereo_image_proc/disparity standalone_nodelet $(arg bond)" respawn="$(arg respawn)"/>-->
+        
+<!--        <node pkg="image_view" type="disparity_view" name="image_view"  output="screen" respawn="$(arg respawn)">-->
+<!--            <remap from="image" to="disparity"/>-->
+<!--        </node>-->
+        <node pkg="rqt_image_view" type="rqt_image_view" name="image_view"/>
+        
+        <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="config"/>
+    </group></group>
+
+</launch>
+
+
+  
+
+
+
+  
