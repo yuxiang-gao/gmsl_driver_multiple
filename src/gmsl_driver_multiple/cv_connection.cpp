@@ -35,7 +35,9 @@ void OpenCVConnector::WriteToOpenCV(const cv::Mat& img, ros::Time stamp) {
     ci.header.frame_id = counter;
     ci.header.stamp = stamp;
     
-    img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::MONO8, img);
+    img_bridge = cv_bridge::CvImage(header, 
+        img.type() == CV_8UC1 ? sensor_msgs::image_encodings::MONO8 : sensor_msgs::image_encodings::BGR8, 
+        img);
     img_bridge.toImageMsg(img_msg); // from cv_bridge to sensor_msgs::Image
     pub.publish(img_msg, ci); // ros::Publisher pub_img = node.advertise<sensor_msgs::Image>("topic", queuesize);
     counter++;
