@@ -36,6 +36,7 @@
 void captureImageThread(
     dwSensorHandle_t *cameraSensor, 
     dwImageProperties *baseProp,
+    dwContextHandle_t context,
     bool output_color
 );
 
@@ -72,10 +73,11 @@ int main(int argc, const char** argv) {
         ProgramArguments::Option_t("offscreen", "1"),
         ProgramArguments::Option_t("slave", "0"),
         ProgramArguments::Option_t("fifo-size", "3"),
+        ProgramArguments::Option_t("color", "0"),
     });
 
     if(initSampleApp(argc, argv, &default_arguments, NULL, WINDOW_WIDTH, WINDOW_HEIGHT)){
-        const bool output_color = default_arguments.has("color");
+        const bool output_color = gArguments.get("color") != "0";
         if(output_color) std::cout << "output in color mode" << std::endl;
         initSdk(&sdk);
         dwImageType cameraImageType;
@@ -99,7 +101,7 @@ void captureImageThread_captureCamera(
     size_t dataLength,
     dwSensorHandle_t cameraSensor,
     uint32_t index,
-    dwImageFormatConverterHandle_t yuv2rgba = DW_NULL_HANDLE,
+    dwImageFormatConverterHandle_t cam2rgba = DW_NULL_HANDLE,
     dwImageNvMedia *frameNVMrgba = nullptr
 ){
     dwCameraFrameHandle_t frameHandle;
@@ -110,17 +112,17 @@ void captureImageThread_captureCamera(
     CHECK_DW_ERROR(dwSensorCamera_readFrame(&frameHandle, index, 1000000, cameraSensor));
     CHECK_DW_ERROR(dwSensorCamera_getImageNvMedia(&frameNVMyuv, DW_CAMERA_PROCESSED_IMAGE, frameHandle));
 
-    if(yuv2rgba != DW_NULL_HANDLE) { //Color mode
-        CHECK_DW_ERROR(dwImageFormatConverter_copyConvertNvMedia(frameNVMrgba, frameNVMyuv, yuv2rgba));
+    if(cam2rgba != DW_NULL_HANDLE) { //Color mode
+        CHECK_DW_ERROR(dwImageFormatConverter_copyConvertNvMedia(frameNVMrgba, frameNVMyuv, cam2rgba));
         frameNVMFinal = frameNVMrgba;
     }
     else{
         frameNVMFinal = frameNVMyuv;
     }
 
-    if(NvMediaImageLock(frameNVMyuv->img, NVMEDIA_IMAGE_ACCESS_READ, &surfaceMap) == NVMEDIA_STATUS_OK){
+    if(NvMediaImageLock(frameNVMFinal->img, NVMEDIA_IMAGE_ACCESS_READ, &surfaceMap) == NVMEDIA_STATUS_OK){
         std::memcpy(yBuffer, (uint8_t*)surfaceMap.surface[0].mapping, dataLength);
-        NvMediaImageUnlock(frameNVMyuv->img);
+        NvMediaImageUnlock(frameNVMFinal->img);
     }
 
     CHECK_DW_ERROR(dwSensorCamera_returnFrame(&frameHandle));
@@ -129,8 +131,8 @@ void captureImageThread_captureCamera(
 void captureImageThread_testCameraAndGetPitch(
     uint32_t *pitch,
     dwSensorHandle_t cameraSensor,
-    uint32_t index
-    dwImageFormatConverterHandle_t yuv2rgba = DW_NULL_HANDLE
+    uint32_t index,
+    dwImageFormatConverterHandle_t cam2rgba = DW_NULL_HANDLE,
     dwImageNvMedia *frameNVMrgba = nullptr
 ){
     dwCameraFrameHandle_t frameHandle;
@@ -141,8 +143,8 @@ void captureImageThread_testCameraAndGetPitch(
     CHECK_DW_ERROR(dwSensorCamera_readFrame(&frameHandle, index, 1000000, cameraSensor));
     CHECK_DW_ERROR(dwSensorCamera_getImageNvMedia(&frameNVMyuv, DW_CAMERA_PROCESSED_IMAGE, frameHandle));
 
-    if(yuv2rgba != DW_NULL_HANDLE) { //Color mode
-        CHECK_DW_ERROR(dwImageFormatConverter_copyConvertNvMedia(frameNVMrgba, frameNVMyuv, yuv2rgba));
+    if(cam2rgba != DW_NULL_HANDLE) { //Color mode
+        CHECK_DW_ERROR(dwImageFormatConverter_copyConvertNvMedia(frameNVMrgba, frameNVMyuv, cam2rgba));
         frameNVMFinal = frameNVMrgba;
     }
     else{
@@ -170,38 +172,37 @@ void captureImageThread(
     
     OpenCVConnector cvcL("left", "narrow_stereo/left", pathL);
     OpenCVConnector cvcR("right", "narrow_stereo/right", pathR);
-    dwImageProperties cameraImageProperties;
-    dwSensorCamera_getImageProperties(&cameraImageProperties, DW_CAMERA_PROCESSED_IMAGE, *cameraSensor);
-    if(cameraImageProperties.pxlFormat!=DW_IMAGE_YUV420 || cameraImageProperties.planeCount != 3) exit(-1);
+    dwImageProperties camImgProp;
+    dwSensorCamera_getImageProperties(&camImgProp, DW_CAMERA_PROCESSED_IMAGE, *cameraSensor);
+    if(camImgProp.pxlFormat!=DW_IMAGE_YUV420 || camImgProp.planeCount != 3) exit(-1);
 
     //Init yuv-> rgba converter
-    dwImageFormatConverterHandle_t yuv2rgba = DW_NULL_HANDLE
-    dwImageNvMedia *frameNVMrgba = nullptr
+    dwImageFormatConverterHandle_t cam2rgba = DW_NULL_HANDLE;
+    dwImageNvMedia frameNVMrgba;
 
     if(output_color){
         dwImageProperties rgbaProp = *baseProp;
         rgbaProp.pxlFormat         = DW_IMAGE_RGBA;
         rgbaProp.planeCount        = 1;
-        CHECK_DW_ERROR(dwImageFormatConverter_initialize(&yuv2rgba, &baseProp, &rgbaProp, context));
-        CHECK_DW_ERROR(dwImageNvMedia_create(&frameNVMrgba, rgbaProp, context));
-        if(yuv2rgba == DW_NULL_HANDLE || frameNVMrgba == nullptr){
-            yuv2rgba = DW_NULL_HANDLE;
-            output_color = false;
-        }
+        CHECK_DW_ERROR(dwImageFormatConverter_initialize(&cam2rgba, &camImgProp, &rgbaProp, context));
+        CHECK_DW_ERROR(dwImageNvMedia_create(&frameNVMrgba, &rgbaProp, context));
     }
 
     CHECK_DW_ERROR(dwSensor_start(*cameraSensor));
+    
+
 
     uint32_t pitchL, pitchR;
-    captureImageThread_testCameraAndGetPitch(&pitchL, *cameraSensor, 0, yuv2rgba, frameNVMrgba);
-    captureImageThread_testCameraAndGetPitch(&pitchR, *cameraSensor, 1, yuv2rgba, frameNVMrgba);
+    captureImageThread_testCameraAndGetPitch(&pitchL, *cameraSensor, 0, cam2rgba, &frameNVMrgba);
+    captureImageThread_testCameraAndGetPitch(&pitchR, *cameraSensor, 1, cam2rgba, &frameNVMrgba);
+    
     if(pitchL != pitchR) exit(-1);
 
     size_t dataLength = pitchL * baseProp->height;
     uint8_t *buffer = new uint8_t[dataLength*2];
     uint8_t *bufferL = buffer, *bufferR = buffer + dataLength;
 
-    cv::Mat pitchImgL, pitchImgR;
+    cv::Mat pitchImgL, pitchImgR, pitchImgLFinal, pitchImgRFinal;
 
     if(output_color){
         pitchImgL = cv::Mat(baseProp->height, pitchL / 4, CV_8UC4, bufferL);
@@ -228,8 +229,8 @@ void captureImageThread(
     
     while(gRun){
         ros::Time pubTime = ros::Time::now();
-        captureImageThread_captureCamera(bufferL, dataLength, *cameraSensor, 0, yuv2rgba, frameNVMrgba);
-        captureImageThread_captureCamera(bufferR, dataLength, *cameraSensor, 1, yuv2rgba, frameNVMrgba);
+        captureImageThread_captureCamera(bufferL, dataLength, *cameraSensor, 0, cam2rgba, &frameNVMrgba);
+        captureImageThread_captureCamera(bufferR, dataLength, *cameraSensor, 1, cam2rgba, &frameNVMrgba);
 
         if(output_color){
             cv::cvtColor(imgL, imgLFinal, cv::COLOR_RGBA2BGR);
@@ -277,13 +278,13 @@ void initSensors(
     params.protocol             = "camera.gmsl";
     CHECK_DW_ERROR(dwSAL_createSensor(camera, params, *sal));
 
-    dwImageProperties cameraImageProperties;
-    dwSensorCamera_getImageProperties(&cameraImageProperties,
+    dwImageProperties camImgProp;
+    dwSensorCamera_getImageProperties(&camImgProp,
                             DW_CAMERA_PROCESSED_IMAGE,
                         *camera);
-    *imageWidth = cameraImageProperties.width;
-    *imageHeight = cameraImageProperties.height;
-    *cameraImageType = cameraImageProperties.type;
+    *imageWidth = camImgProp.width;
+    *imageHeight = camImgProp.height;
+    *cameraImageType = camImgProp.type;
 
     dwCameraProperties cameraProperties;
     dwSensorCamera_getSensorProperties(&cameraProperties, *camera);

@@ -1,16 +1,17 @@
 <launch>
     <group ns="gmsl_stereo">
+        <arg name="respawn" default="false"/>
         <arg name="left_camera_info_path" default="file://$(find gmsl_driver_multiple)/camera_info/left.yaml"/>
         <arg name="right_camera_info_path" default="file://$(find gmsl_driver_multiple)/camera_info/right.yaml"/>
         <arg name="chessboard_size" default="15x13"/>
         <arg name="chessboard_square" default="0.05"/>
         
-        <node pkg="gmsl_driver_multiple" type="gmsl_driver_multiple_node" name="gmsl_stereo" output="screen">
+        <node pkg="gmsl_driver_multiple" type="gmsl_driver_multiple_node" name="gmsl_stereo" respawn="$(arg respawn)">
             <param name="left_camera_info_path" type="str" value="$(arg left_camera_info_path)"/>
             <param name="right_camera_info_path" type="str" value="$(arg right_camera_info_path)"/>
         </node>
         
-        <node pkg="camera_calibration" type="cameracalibrator.py" name="calib" output="screen" args="--size=$(arg chessboard_size) --square=$(arg chessboard_square)">
+        <node pkg="camera_calibration" type="cameracalibrator.py" name="calib" output="screen" args="--size=$(arg chessboard_size) --square=$(arg chessboard_square)" respawn="$(arg respawn)">
             <remap from="left" to="left/image_raw"/>
             <remap from="right" to="right/image_raw"/>
             <remap from="left_camera" to="left"/>
