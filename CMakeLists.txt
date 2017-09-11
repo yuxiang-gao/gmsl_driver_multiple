@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   camera_info_manager
+  nodelet
 )
 
 set(Driveworks_INCLUDE_DIR /usr/local/driveworks/include)

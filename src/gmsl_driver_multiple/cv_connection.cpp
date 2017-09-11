@@ -1,4 +1,4 @@
-#include "cv_connection.hpp"
+#include "cv_connection/cv_connection.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <vector>
