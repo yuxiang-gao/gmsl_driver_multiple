@@ -1,4 +1,4 @@
-#include "cv_connection.hpp"
+#include "cv_connection/cv_connection.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <vector>
@@ -8,38 +8,39 @@
 	
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
+#include <camera_info_manager/camera_info_manager.h>
 
-OpenCVConnector::OpenCVConnector() : it(nh), counter(0)	{
-   pub = it.advertise("camera/image", 1);
-    
+#include <iostream>
 
+OpenCVConnector::OpenCVConnector(std::string node_name, std::string camera_name, std::string calib_file_path) : 
+    nh(node_name) ,
+    it(nh), cinfo(nh, camera_name, calib_file_path), counter(0)	{
+   pub = it.advertiseCamera("image_raw", 1);
 }
 
+void GetFilePath(std::string &left_path, std::string &right_path){ 
+    ros::param::get("~left_camera_info_path", left_path);
+    ros::param::get("~right_camera_info_path", right_path);
+}
 
-void OpenCVConnector::WriteToOpenCV(unsigned char* buffer, int width, int height) {
-
-    
-    // create a cv::Mat from a dwImageNvMedia rgbaImage
-    cv::Mat mat_img(cv::Size(width, height), CV_8UC4, buffer);
-
-    cv::Mat converted;//=new cv::Mat();
-
-    cv::cvtColor(mat_img, converted, cv::COLOR_RGBA2BGR);   //=COLOR_BGRA2BG
-    cv::flip(converted, converted, 0);
-    //cv::imshow("show", converted);
-    //cv::waitKey(3);
-
+void OpenCVConnector::WriteToOpenCV(const cv::Mat& img, ros::Time stamp) {
     cv_bridge::CvImage img_bridge;
     sensor_msgs::Image img_msg; // >> message to be sent
+    
+    sensor_msgs::CameraInfo ci(cinfo.getCameraInfo());
 
     std_msgs::Header header; // empty header
     header.seq = counter; // user defined counter
-    header.stamp = ros::Time::now(); // time
-    img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::BGR8, converted);
+    header.stamp = stamp; // time
+    ci.header.frame_id = counter;
+    ci.header.stamp = stamp;
+    
+    img_bridge = cv_bridge::CvImage(header, 
+        img.type() == CV_8UC1 ? sensor_msgs::image_encodings::MONO8 : sensor_msgs::image_encodings::BGR8, 
+        img);
     img_bridge.toImageMsg(img_msg); // from cv_bridge to sensor_msgs::Image
-    std::cout << "return received gl" << std::endl;
-    pub.publish(img_msg); // ros::Publisher pub_img = node.advertise<sensor_msgs::Image>("topic", queuesize);
-
+    pub.publish(img_msg, ci); // ros::Publisher pub_img = node.advertise<sensor_msgs::Image>("topic", queuesize);
+    counter++;
 }
 
 

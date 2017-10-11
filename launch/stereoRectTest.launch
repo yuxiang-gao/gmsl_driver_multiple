@@ -1,0 +1,47 @@
+<launch>
+    <group ns="gmsl_stereo">
+        <arg name="respawn" default="false"/>
+        <arg name="left_camera_info_path" default="file://$(find gmsl_driver_multiple)/camera_info/left.yaml"/>
+        <arg name="right_camera_info_path" default="file://$(find gmsl_driver_multiple)/camera_info/right.yaml"/>
+        <arg     if="$(arg respawn)" name="bond" value="" />
+        <arg unless="$(arg respawn)" name="bond" value="--no-bond" />
+        <arg name="prescale" default="0.3"/>
+        
+        <!-- Camera Driver -->
+        <node ns="origin" pkg="gmsl_driver_multiple" type="gmsl_driver_multiple_node" name="gmsl_stereo" respawn="$(arg respawn)">
+            <param name="left_camera_info_path" type="str" value="$(arg left_camera_info_path)"/>
+            <param name="right_camera_info_path" type="str" value="$(arg right_camera_info_path)"/>
+        </node>
+        
+        <node pkg="nodelet" type="nodelet" name="resize_left" args="standalone image_proc/resize $(arg bond)" respawn="$(arg respawn)">
+            <remap from="image" to="origin/left/image_raw"/>
+            <remap from="camera_info" to="origin/left/camera_info"/>
+            <remap from="~image" to="resized/left/image_raw"/>
+            <remap from="~camera_info" to="resized/left/camera_info"/>
+            <param name="scale_height" type="double" value="$(arg prescale)"/>
+            <param name="scale_width" type="double" value="$(arg prescale)"/>
+        </node>
+        
+        <node pkg="nodelet" type="nodelet" name="resize_right" args="standalone image_proc/resize $(arg bond)" respawn="$(arg respawn)">
+            <remap from="image" to="origin/right/image_raw"/>
+            <remap from="camera_info" to="origin/right/camera_info"/>
+            <remap from="~image" to="resized/right/image_raw"/>
+            <remap from="~camera_info" to="resized/right/camera_info"/>
+            <param name="scale_height" type="double" value="$(arg prescale)"/>
+            <param name="scale_width" type="double" value="$(arg prescale)"/>
+        </node>
+        
+        <group ns="resized">
+            <!-- XXX: copied from package image_proc/launch/image_proc.launch  -->
+            <!-- XXX: Using standalone mode is OK, but WHY  -->
+            <node ns="left" pkg="nodelet" type="nodelet" name="rectify_left" args="standalone image_proc/rectify $(arg bond)" respawn="$(arg respawn)">
+                <remap from="image_mono" to="image_raw"/>
+            </node>
+            
+            <node ns="right" pkg="nodelet" type="nodelet" name="rectify_right" args="standalone image_proc/rectify $(arg bond)" respawn="$(arg respawn)">
+                <remap from="image_mono" to="image_raw"/>
+            </node>
+        </group>
+        <node pkg="rqt_image_view" type="rqt_image_view" name="image_view"/>
+    </group>
+</launch>

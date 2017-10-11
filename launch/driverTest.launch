@@ -1,0 +1,14 @@
+<launch>
+    <group ns="gmsl_stereo">
+        <arg name="respawn" default="false"/>
+        <arg name="left_camera_info_path" default="file://$(find gmsl_driver_multiple)/camera_info/left.yaml"/>
+        <arg name="right_camera_info_path" default="file://$(find gmsl_driver_multiple)/camera_info/right.yaml"/>
+        
+        <node pkg="gmsl_driver_multiple" type="gmsl_driver_multiple_node" name="gmsl_stereo" respawn="$(arg respawn)">
+            <param name="left_camera_info_path" type="str" value="$(arg left_camera_info_path)"/>
+            <param name="right_camera_info_path" type="str" value="$(arg right_camera_info_path)"/>
+        </node>
+        
+        <node pkg="rqt_image_view" type="rqt_image_view" name="image_view"/>
+    </group>
+</launch>

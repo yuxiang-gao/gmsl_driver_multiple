@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  camera_info_manager
+  nodelet
 )
 
 set(Driveworks_INCLUDE_DIR /usr/local/driveworks/include)
@@ -90,7 +92,7 @@ set(COMMON_SOURCES
     src/common/ConsoleColor.cpp
     #src/common/ProfilerCUDA.cpp
     #src/common/WindowGLFW.cpp
-
+    src/common/SampleFramework.cpp
 
 )
 
